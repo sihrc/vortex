@@ -3,11 +3,11 @@ import os
 from setuptools import setup, find_packages
 
 setup(
-    name='{{package}}',
+    name='vortex',
     version='0.1',
-    description='{{description}}',
-    author='{{author}}',
-    author_email='{{email}}',
+    description='aiohttp wrapped web framework',
+    author='Chris Lee',
+    author_email='sihrc.c.lee@gmail.com',
     packages=find_packages(),
     install_requires=open(
         os.path.join(

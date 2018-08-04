@@ -1,7 +1,7 @@
 FROM alpine
 
-LABEL author="{{author}}"
-LABEL email="{{email}}"
+LABEL author="Chris Lee"
+LABEL email="sihrc.c.lee@gmail.com"
 
 COPY requirements.txt /requirements.txt
 RUN apk update && \
@@ -16,8 +16,8 @@ RUN apk update && \
     rm -r /root/.cache && \
     pip3 install -r requirements.txt
 
-COPY . /{{project}}
-WORKDIR {{project}}
+COPY . /vortex
+WORKDIR vortex
 
 RUN python3 setup.py develop
 
