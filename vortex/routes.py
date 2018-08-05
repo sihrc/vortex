@@ -9,6 +9,7 @@ RM = RoutesManager(
 """
 
 from functools import wraps, partial
+from copy import deepcopy
 
 from aiohttp import web
 
@@ -28,14 +29,17 @@ class RouteManager(object):
         self.base = base
         self.app = web.Application()
         self.app.middlewares.append(middlewares)
-        self.app.update(**middleware_kwargs)
+        self.base_middleware_kwargs = middleware_kwargs
 
     def route(self, methods, path, route_name=None, middlewares=(), **middleware_kwargs):
         def route_decorator(fn):
             name = route_name or fn.__name__
 
+            result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
+            result_middleware_kwargs.update(middleware_kwargs)
+
             handler = partial(
-                attach_middleware_kwargs(middleware_kwargs),
+                attach_middleware_kwargs(result_middleware_kwargs),
                 handler=fn
             )
 
