@@ -12,6 +12,8 @@ from functools import wraps, partial
 
 from aiohttp import web
 
+from vortex.middlewares.builtin import attach_middleware_kwargs
+
 class RouteManager(object):
     """
     Quick References:
@@ -32,12 +34,15 @@ class RouteManager(object):
         def route_decorator(fn):
             name = route_name or fn.__name__
 
-            handler = fn
+            handler = partial(
+                attach_middleware_kwargs(middleware_kwargs),
+                handler=fn
+            )
+
             # Chain middlewares for specific route
             for middleware in middlewares:
                 handler = partial(middleware, handler=handler)
 
-            # TODO: Attach middleware_kwargs to this specific route
             self.app.add_routes([
                 getattr(web, method.lower())(path, handler, name=name)
                 for method in methods
