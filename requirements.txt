@@ -1,5 +1,6 @@
-aiohttp
-cchardet
 aiodns
+aiohttp
+aiohttp_debugtoolbar
+cchardet
 setuptools
 wheel
