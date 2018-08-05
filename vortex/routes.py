@@ -8,8 +8,9 @@ RM = RoutesManager(
 )
 """
 
-from functools import wraps
-from aiohttp.web import RouteTableDef
+from functools import wraps, partial
+
+from aiohttp import web
 
 class RouteManager(object):
     """
@@ -23,21 +24,24 @@ class RouteManager(object):
     """
     def __init__(self, base, middlewares=(), **middleware_kwargs):
         self.base = base
-        self.middleware_kwargs = middleware_kwargs
-        self.middlewares = middlewares
+        self.app = web.Application()
+        self.app.middlewares.append(middlewares)
+        self.app.update(**middleware_kwargs)
 
+    def route(self, methods, path, route_name=None, middlewares=(), **middleware_kwargs):
+        def route_decorator(fn):
+            name = route_name or fn.__name__
 
-    def route(self, methods, path, middlewares=(), **middleware_kwargs):
-        @wraps
-        def handler(fn):
+            handler = fn
+            # Chain middlewares for specific route
+            for middleware in middlewares:
+                handler = partial(middleware, handler=handler)
+
+            # TODO: Attach middleware_kwargs to this specific route
+            self.app.add_routes([
+                getattr(web, method.lower())(path, handler, name=name)
+                for method in methods
+            ])
+
             return fn
-
-        for method in methods:
-            # aiohttp web will consolidate multiple methods
-            self._add_route(method, path, middlewares, middleware_kwargs)
-
-        return handler
-
-
-    def _add_route(self, method, path, middlewares, middleware_kwargs):
-        raise NotImplementedError()
+        return route_decorator
