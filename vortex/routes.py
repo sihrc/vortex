@@ -8,12 +8,24 @@ RM = RoutesManager(
 )
 """
 
-from functools import wraps, partial
+from functools import wraps, partial as functools_partial
 from copy import deepcopy
 
 from aiohttp import web
 
 from vortex.middlewares.builtin import attach_middleware_kwargs
+
+
+def partial(middleware, handler):
+    """
+    Custom partial in order to propagate original fn attributes
+    """
+    resulting_func = functools_partial(middleware, handler=handler)
+    resulting_func.__name__ = handler.__name__
+    resulting_func.__module__ = handler.__module__
+    resulting_func.__doc__ = handler.__doc__
+    return resulting_func
+
 
 class RouteManager(object):
     """
@@ -30,6 +42,7 @@ class RouteManager(object):
         self.app = web.Application()
         self.app.middlewares.append(middlewares)
         self.base_middleware_kwargs = middleware_kwargs
+
 
     def route(self, methods, path, route_name=None, middlewares=(), **middleware_kwargs):
         def route_decorator(fn):
