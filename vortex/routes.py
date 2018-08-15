@@ -13,10 +13,13 @@ from copy import deepcopy
 
 from aiohttp import web
 
-from vortex.middlewares.builtin import attach_middleware_kwargs
+from vortex.middlewares.builtin import (
+    attach_middleware_to_request_kwargs,
+    attach_middleware_to_response_kwargs
+)
 
 
-def partial(middleware, handler):
+def _partial(middleware, handler):
     """
     Custom partial in order to propagate original fn attributes
     """
@@ -45,25 +48,30 @@ class RouteManager(object):
 
 
     def route(self, methods, path, route_name=None, middlewares=(), **middleware_kwargs):
-        def route_decorator(fn):
-            name = route_name or fn.__name__
+        def route_decorator(handler):
+            name = route_name or handler.__name__
 
             result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
             result_middleware_kwargs.update(middleware_kwargs)
 
-            handler = partial(
-                attach_middleware_kwargs(result_middleware_kwargs),
-                handler=fn
+            handler = _partial(
+                attach_middleware_to_response_kwargs(result_middleware_kwargs),
+                handler=handler
             )
 
             # Chain middlewares for specific route
             for middleware in middlewares:
-                handler = partial(middleware, handler=handler)
+                handler = _partial(middleware, handler=handler)
+
+            handler = _partial(
+                attach_middleware_to_request_kwargs(result_middleware_kwargs),
+                handler=handler
+            )
 
             self.app.add_routes([
                 getattr(web, method.lower())(path, handler, name=name)
                 for method in methods
             ])
 
-            return fn
+            return handler
         return route_decorator
