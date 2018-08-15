@@ -8,8 +8,27 @@ RM = RoutesManager(
 )
 """
 
-from functools import wraps
-from aiohttp.web import RouteTableDef
+from functools import wraps, partial as functools_partial
+from copy import deepcopy
+
+from aiohttp import web
+
+from vortex.middlewares.builtin import (
+    attach_middleware_to_request_kwargs,
+    attach_middleware_to_response_kwargs
+)
+
+
+def _partial(middleware, handler):
+    """
+    Custom partial in order to propagate original fn attributes
+    """
+    resulting_func = functools_partial(middleware, handler=handler)
+    resulting_func.__name__ = handler.__name__
+    resulting_func.__module__ = handler.__module__
+    resulting_func.__doc__ = handler.__doc__
+    return resulting_func
+
 
 class RouteManager(object):
     """
@@ -23,21 +42,36 @@ class RouteManager(object):
     """
     def __init__(self, base, middlewares=(), **middleware_kwargs):
         self.base = base
-        self.middleware_kwargs = middleware_kwargs
-        self.middlewares = middlewares
+        self.app = web.Application()
+        self.app.middlewares.append(middlewares)
+        self.base_middleware_kwargs = middleware_kwargs
 
 
-    def route(self, methods, path, middlewares=(), **middleware_kwargs):
-        @wraps
-        def handler(fn):
-            return fn
+    def route(self, methods, path, route_name=None, middlewares=(), **middleware_kwargs):
+        def route_decorator(handler):
+            name = route_name or handler.__name__
 
-        for method in methods:
-            # aiohttp web will consolidate multiple methods
-            self._add_route(method, path, middlewares, middleware_kwargs)
+            result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
+            result_middleware_kwargs.update(middleware_kwargs)
 
-        return handler
+            handler = _partial(
+                attach_middleware_to_response_kwargs(result_middleware_kwargs),
+                handler=handler
+            )
 
+            # Chain middlewares for specific route
+            for middleware in middlewares:
+                handler = _partial(middleware, handler=handler)
 
-    def _add_route(self, method, path, middlewares, middleware_kwargs):
-        raise NotImplementedError()
+            handler = _partial(
+                attach_middleware_to_request_kwargs(result_middleware_kwargs),
+                handler=handler
+            )
+
+            self.app.add_routes([
+                getattr(web, method.lower())(path, handler, name=name)
+                for method in methods
+            ])
+
+            return handler
+        return route_decorator

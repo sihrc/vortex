@@ -15,5 +15,8 @@ setup(
             "requirements.txt"
         ),
         'r'
-    ).readlines()
+    ).readlines(),
+    extras_require={
+        "testing": ["pytest"]
+    }
 )
