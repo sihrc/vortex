@@ -19,6 +19,6 @@ RUN apk update && \
 COPY . /vortex
 WORKDIR vortex
 
-RUN python3 setup.py develop
+RUN pip3 install -e .[testing]
 
 CMD ["bash"]
