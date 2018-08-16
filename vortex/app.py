@@ -12,6 +12,7 @@ def start_app(
     configs = configs or {}
 
     app = web.Application()
+    app.middlewares.extend(middlewares)
     app.update(**configs)
 
     for route_manager in route_managers:
@@ -19,4 +20,9 @@ def start_app(
         app.add_subapp(route_manager.base, route_manager.app)
 
     # TODO: Log server startup
-    web.run_app(app)
+    web.run_app(
+        app,
+        host=bind,
+        port=port,
+        print=print # TODO: Replace with logger
+    )
