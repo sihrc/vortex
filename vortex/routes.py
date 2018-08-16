@@ -7,7 +7,6 @@ RM = RoutesManager(
     scopes_required=("scope:read", "scope:metadata") # Examples of keyword arguments available in middlewares
 )
 """
-
 from functools import wraps, partial as functools_partial
 from copy import deepcopy
 
@@ -42,12 +41,26 @@ class RouteManager(object):
     """
     def __init__(self, base, middlewares=(), **middleware_kwargs):
         self.base = base
-        self.app = web.Application()
-        self.app.middlewares.append(middlewares)
+        self.middlewares = list(middlewares)
         self.base_middleware_kwargs = middleware_kwargs
+        self.routes = []
+        self.is_subapp = self.base != "" and self.base != "/"
+
+
+    def register(self, app):
+        if self.is_subapp:
+            subapp = web.Application()
+            subapp.middlewares.extend(self.middlewares)
+            app.add_subapp(self.base, subapp)
+        else:
+            app.add_routes(self.routes)
 
 
     def route(self, methods, path, route_name=None, middlewares=(), **middleware_kwargs):
+        # Chain middlewares for specific route
+        if not self.is_subapp:
+            middlewares = self.middlewares + list(middlewares)
+
         def route_decorator(handler):
             name = route_name or handler.__name__
 
@@ -59,7 +72,6 @@ class RouteManager(object):
                 handler=handler
             )
 
-            # Chain middlewares for specific route
             for middleware in middlewares:
                 handler = _partial(middleware, handler=handler)
 
@@ -68,7 +80,7 @@ class RouteManager(object):
                 handler=handler
             )
 
-            self.app.add_routes([
+            self.routes.extend([
                 getattr(web, method.lower())(path, handler, name=name)
                 for method in methods
             ])
