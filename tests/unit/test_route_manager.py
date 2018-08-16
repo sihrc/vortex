@@ -47,39 +47,35 @@ class RouteManagerUnitTests(AsyncTestMixin, unittest.TestCase):
         route_called.assert_any_call()
 
 
-    def test_basic_route(self):
+    def test_basic_subapp_route(self):
         """
         Test that basic routes work.
         """
-        application_mock = MagicMock()
         RM = RouteManager(base="/mock")
-        RM.app = application_mock
 
         @RM.route(methods=["GET"], path="/mock_route")
         async def mock_route(request):
             return
 
         # Not using assert_called_with because separate instances of RouteDef are not equal
-        mock_args, _ = application_mock.add_routes.call_args
 
-        self.assertEqual(len(mock_args[0]), 1)
-        route_def = mock_args[0][0]
-
+        self.assertEqual(len(RM.routes), 1)
+        route_def = RM.routes[0]
         self.assertIsInstance(route_def, web.RouteDef)
         self.assertEqual(route_def.method, "GET")
         self.assertEqual(route_def.path, "/mock_route")
         self.assertEqual(route_def.handler.__name__, mock_route.__name__)
 
 
-    def test_middlewares(self):
+    def test_middlewares_base(self):
         """
         Ensures that application middlewares are added to the sub-application
         Ensures that route middlewares are applied to the handlers & called
         """
-        application_mock = MagicMock()
-
+        app_middleware_run_check = MagicMock()
         @web.middleware
         async def mock_app_middleware(request, handler):
+            app_middleware_run_check()
             response = await handler(request)
             return response
 
@@ -90,11 +86,10 @@ class RouteManagerUnitTests(AsyncTestMixin, unittest.TestCase):
             response = await handler(request)
             return response
 
-        with patch("vortex.routes.web.Application", MagicMock(return_value=application_mock)):
-            RM = RouteManager(base="/mock", middlewares=(mock_app_middleware, ))
-
+        RM = RouteManager(base="/", middlewares=(mock_app_middleware, ))
         # Ensure sub-application wide middlewares were added
-        application_mock.middlewares.append.assert_called_with((mock_app_middleware, ))
+        self.assertEqual(len(RM.middlewares), 1)
+        self.assertEqual(RM.middlewares[0], mock_app_middleware)
 
         mock_route_run_check = MagicMock()
         @RM.route(methods=["GET"], path="/mock_route", middlewares=(mock_route_middleware, ))
@@ -102,10 +97,8 @@ class RouteManagerUnitTests(AsyncTestMixin, unittest.TestCase):
             mock_route_run_check()
             return MagicMock()
 
-        mock_args, _ = application_mock.add_routes.call_args
-
-        self.assertEqual(len(mock_args[0]), 1)
-        route_def = mock_args[0][0]
+        self.assertEqual(len(RM.routes), 1)
+        route_def = RM.routes[0]
 
         # Ensure even with middlewares, the handler still maintains function signature.
         self.assertEqual(route_def.method, "GET")
@@ -114,8 +107,55 @@ class RouteManagerUnitTests(AsyncTestMixin, unittest.TestCase):
 
         # Check route middlewares are called.
         self.run_in_loop(route_def.handler(MagicMock()))
+        app_middleware_run_check.assert_any_call()
         route_middleware_run_check.assert_any_call()
         mock_route_run_check.assert_any_call()
+
+
+    def test_middlewares_subapp(self):
+        """
+        Ensures that application middlewares are added to the sub-application
+        Ensures that route middlewares are applied to the handlers & called
+        """
+        app_middleware_run_check = MagicMock()
+        @web.middleware
+        async def mock_app_middleware(request, handler):
+            app_middleware_run_check()
+            response = await handler(request)
+            return response
+
+        route_middleware_run_check = MagicMock()
+        @web.middleware
+        async def mock_route_middleware(request, handler):
+            route_middleware_run_check()
+            response = await handler(request)
+            return response
+
+        RM = RouteManager(base="/mock", middlewares=(mock_app_middleware, ))
+        # Ensure sub-application wide middlewares were added
+        self.assertEqual(len(RM.middlewares), 1)
+        self.assertEqual(RM.middlewares[0], mock_app_middleware)
+
+        mock_route_run_check = MagicMock()
+        @RM.route(methods=["GET"], path="/mock_route", middlewares=(mock_route_middleware, ))
+        async def mock_route(request):
+            mock_route_run_check()
+            return MagicMock()
+
+        self.assertEqual(len(RM.routes), 1)
+        route_def = RM.routes[0]
+
+        # Ensure even with middlewares, the handler still maintains function signature.
+        self.assertEqual(route_def.method, "GET")
+        self.assertEqual(route_def.path, "/mock_route")
+        self.assertEqual(route_def.handler.__name__, mock_route.__name__)
+
+        # Check route middlewares are called.
+        self.run_in_loop(route_def.handler(MagicMock()))
+        app_middleware_run_check.assert_not_called()
+        route_middleware_run_check.assert_any_call()
+        mock_route_run_check.assert_any_call()
+
 
     def test_middleware_kwargs(self):
         """
@@ -156,8 +196,8 @@ class RouteManagerUnitTests(AsyncTestMixin, unittest.TestCase):
                              resulting_middleware_kwargs)
             return MagicMock()
 
-        mock_args, _ = application_mock.add_routes.call_args
-        route_def = mock_args[0][0]
+        self.assertEqual(len(RM.routes), 1)
+        route_def = RM.routes[0]
 
         # Run the route
         self.run_in_loop(route_def.handler(MagicMock()))
@@ -165,4 +205,36 @@ class RouteManagerUnitTests(AsyncTestMixin, unittest.TestCase):
         route_middleware_run_check.assert_any_call()
 
 
+    @patch("vortex.routes.web.Application", lambda: MagicMock())
+    def test_register_subapp(self):
+        """
+        Test register for subapp and base app cases
+        """
+        application_mock = MagicMock()
+        RM = RouteManager(base="/mock", middlewares=(MagicMock(), ))
 
+        @RM.route(methods=["GET"], path="/mock_route")
+        async def mock_route(request):
+            return
+
+        RM.register(application_mock)
+        application_mock.add_subapp.assert_called_once()
+        base, subapp = application_mock.add_subapp.call_args[0]
+        self.assertEqual(base, "/mock")
+        subapp.middlewares.extend.assert_called_with(RM.middlewares)
+
+
+    @patch("vortex.routes.web.Application", lambda: MagicMock())
+    def test_register_base_app(self):
+        """
+        Test register for subapp and base app cases
+        """
+        application_mock = MagicMock()
+        RM = RouteManager(base="/", middlewares=(MagicMock(), ))
+
+        @RM.route(methods=["GET"], path="/mock_route")
+        async def mock_route(request):
+            return
+
+        RM.register(application_mock)
+        application_mock.add_routes.assert_called_with(RM.routes)

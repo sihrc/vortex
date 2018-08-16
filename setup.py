@@ -17,6 +17,6 @@ setup(
         'r'
     ).readlines(),
     extras_require={
-        "testing": ["pytest"]
+        "testing": ["pytest", "pytest-aiohttp"]
     }
 )

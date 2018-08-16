@@ -2,9 +2,7 @@ from aiohttp import web
 
 DEFAULT_MIDDLEWARES = ()
 
-def start_app(
-    bind="0.0.0.0",
-    port=80,
+def get_app(
     route_managers=(),
     middlewares=DEFAULT_MIDDLEWARES,
     configs=None
@@ -17,12 +15,16 @@ def start_app(
 
     for route_manager in route_managers:
         # TODO: Log route_manager routes loaded into app
-        app.add_subapp(route_manager.base, route_manager.app)
+        route_manager.register(app)
 
+    return app
+
+
+def start_app(app, host="0.0.0.0", port=80):
     # TODO: Log server startup
     web.run_app(
         app,
-        host=bind,
+        host=host,
         port=port,
         print=print # TODO: Replace with logger
     )
