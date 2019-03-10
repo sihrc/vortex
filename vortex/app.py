@@ -20,11 +20,11 @@ def get_app(
     return app
 
 
-def start_app(app, host="0.0.0.0", port=80):
+def start_app(app, host="0.0.0.0", port=80, logger=None):
     # TODO: Log server startup
     web.run_app(
         app,
         host=host,
         port=port,
-        print=print # TODO: Replace with logger
+        print=logger or print # TODO: Replace with logger
     )
