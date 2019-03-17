@@ -13,6 +13,7 @@ from copy import deepcopy
 from aiohttp import web
 
 from vortex.middlewares.builtin import attach_middleware_to_request_kwargs
+from vortex.typing import type_check
 
 
 def _partial(middleware, handler):
@@ -49,6 +50,7 @@ class RouteManager(object):
             subapp = web.Application(
                 middlewares=self.middlewares
             )
+
             subapp.add_routes(self.routes)
             app.add_subapp(self.base, subapp)
         else:
@@ -64,23 +66,24 @@ class RouteManager(object):
             path = path[:-1]
 
         def route_decorator(handler):
+            typed_handler = type_check(handler)
             name = route_name or handler.__name__
 
             result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
             result_middleware_kwargs.update(middleware_kwargs)
 
             for middleware in middlewares:
-                handler = _partial(middleware, handler=handler)
+                typed_handler = _partial(middleware, handler=typed_handler)
 
-            handler = _partial(
+            typed_handler = _partial(
                 attach_middleware_to_request_kwargs(result_middleware_kwargs),
-                handler=handler
+                handler=typed_handler
             )
 
             self.routes.extend([
-                getattr(web, method.lower())(path, handler, name=name)
+                getattr(web, method.lower())(path, typed_handler, name=name)
                 for method in methods
             ])
 
-            return handler
+            return typed_handler
         return route_decorator
