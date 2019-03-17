@@ -12,10 +12,7 @@ from copy import deepcopy
 
 from aiohttp import web
 
-from vortex.middlewares.builtin import (
-    attach_middleware_to_request_kwargs,
-    attach_middleware_to_response_kwargs
-)
+from vortex.middlewares.builtin import attach_middleware_to_request_kwargs
 
 
 def _partial(middleware, handler):
@@ -41,16 +38,18 @@ class RouteManager(object):
     """
     def __init__(self, base, middlewares=(), **middleware_kwargs):
         self.base = base
-        self.middlewares = list(middlewares)
+        self.middlewares = [attach_middleware_to_request_kwargs(middleware_kwargs)] + list(middlewares)
         self.base_middleware_kwargs = middleware_kwargs
         self.routes = []
         self.is_subapp = self.base != "" and self.base != "/"
 
 
-    def register(self, app):
+    def register(self, app): # Attach Middleware is not working when additional middlewars are specified in RouteManager
         if self.is_subapp:
-            subapp = web.Application()
-            subapp.middlewares.extend(self.middlewares)
+            subapp = web.Application(
+                middlewares=self.middlewares
+            )
+            subapp.add_routes(self.routes)
             app.add_subapp(self.base, subapp)
         else:
             app.add_routes(self.routes)
@@ -61,16 +60,14 @@ class RouteManager(object):
         if not self.is_subapp:
             middlewares = self.middlewares + list(middlewares)
 
+        if path.endswith("/"):
+            path = path[:-1]
+
         def route_decorator(handler):
             name = route_name or handler.__name__
 
             result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
             result_middleware_kwargs.update(middleware_kwargs)
-
-            handler = _partial(
-                attach_middleware_to_response_kwargs(result_middleware_kwargs),
-                handler=handler
-            )
 
             for middleware in middlewares:
                 handler = _partial(middleware, handler=handler)
