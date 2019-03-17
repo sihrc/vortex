@@ -197,6 +197,8 @@ def type_check(f):
 
             if field in arguments:
                 value = arguments[field]
+            elif field in request.match_info:
+                value = request.match_info[field]
             elif field in defaults:
                 value = defaults[field]
             elif allowed_type is Optional:
