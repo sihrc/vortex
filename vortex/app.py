@@ -1,7 +1,12 @@
 from aiohttp import web
+from aiohttp.web_exceptions import HTTPPermanentRedirect
 
 from vortex.middlewares.builtin import attach_middleware_to_request_kwargs
-DEFAULT_MIDDLEWARES = (web.normalize_path_middleware(remove_slash=True, append_slash=False), )
+DEFAULT_MIDDLEWARES = (web.normalize_path_middleware(
+    remove_slash=True,
+    append_slash=False,
+    redirect_class=HTTPPermanentRedirect
+), )
 
 def get_app(
     route_managers=(),
