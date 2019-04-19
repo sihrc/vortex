@@ -85,11 +85,15 @@ class Dict(Argument):
             try:
                 key = self.key(key)
             except:
-                raise TypeError(f"Expected {key} in {decoded} to be castable to {self.key}")
+                raise TypeError(
+                    f"Expected {key} in {decoded} to be castable to {self.key}"
+                )
             try:
                 value = self.value(value)
             except:
-                raise TypeError(f"Expected {value} in {decoded} to be castable to {self.value}")
+                raise TypeError(
+                    f"Expected {value} in {decoded} to be castable to {self.value}"
+                )
 
             casted_dict[key] = value
 
@@ -99,11 +103,15 @@ class Dict(Argument):
         if not isinstance(item, dict):
             return False
 
-        return all([self.key.__instancecheck__(key) for key in item.keys()]) \
-            and all([self.value.__instancecheck__(value) for value in item.values()])
+        return all([self.key.__instancecheck__(key) for key in item.keys()]) and all(
+            [self.value.__instancecheck__(value) for value in item.values()]
+        )
 
     def __str__(self):
-        return super().__str__() + f"<{self.key}, {self.value}> with keys:{self.expected_keys}"
+        return (
+            super().__str__()
+            + f"<{self.key}, {self.value}> with keys:{self.expected_keys}"
+        )
 
 
 class Any(Argument):
@@ -177,7 +185,8 @@ def type_check(f):
         value = defaults[field]
         if value is not None and not allowed_type.__instancecheck__(value):
             raise AssertionError(
-                f"Default value for {field} must be of type {allowed_type}")
+                f"Default value for {field} must be of type {allowed_type}"
+            )
 
     async def wrapper(request, *args, **kwargs):
         arguments = {}
@@ -209,11 +218,11 @@ def type_check(f):
             if not isinstance(value, allowed_type):
                 try:
                     value = allowed_type(value)
-                except:
+                except Exception:
                     raise InvalidFormat(field, allowed_type)
 
             resolved_arguments[field] = value
-
         response = await f(request, *args, **kwargs, **resolved_arguments)
         return response
+
     return wrapper

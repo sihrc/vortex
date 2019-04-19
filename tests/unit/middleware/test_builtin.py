@@ -1,7 +1,10 @@
 from unittest.mock import MagicMock
 
 from aiohttp.web import Request, Response
-from vortex.middlewares.builtin import attach_middleware_to_request_kwargs, attach_middleware_to_response_kwargs
+from vortex.middlewares.builtin import (
+    attach_middleware_to_request_kwargs,
+    attach_middleware_to_response_kwargs,
+)
 
 from tests.mixins.async_mixin import AsyncTestMixin
 
@@ -26,7 +29,6 @@ class BuiltinMiddlewareTest(AsyncTestMixin):
         middleware = attach_middleware_to_request_kwargs(mock_kwargs)
         self.run_in_loop(middleware(MagicMock(), mock_route))
 
-
     def test_attach_middleware_to_response_kwargs(self):
         """
         Ensures request object has middleware_configs attached and
@@ -43,4 +45,3 @@ class BuiltinMiddlewareTest(AsyncTestMixin):
         response = self.run_in_loop(middleware(MagicMock(), mock_route))
 
         self.assertEqual(response.middleware_configs, mock_kwargs)
-
