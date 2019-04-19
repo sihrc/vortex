@@ -37,27 +37,30 @@ class RouteManager(object):
 
     These are later accessible via request.match_info[identifier]
     """
+
     def __init__(self, base, middlewares=(), **middleware_kwargs):
         self.base = base
-        self.middlewares = [attach_middleware_to_request_kwargs(middleware_kwargs)] + list(middlewares)
+        self.middlewares = [
+            attach_middleware_to_request_kwargs(middleware_kwargs)
+        ] + list(middlewares)
         self.base_middleware_kwargs = middleware_kwargs
         self.routes = []
         self.is_subapp = self.base != "" and self.base != "/"
 
-
-    def register(self, app): # Attach Middleware is not working when additional middlewars are specified in RouteManager
+    def register(
+        self, app
+    ):  # Attach Middleware is not working when additional middlewars are specified in RouteManager
         if self.is_subapp:
-            subapp = web.Application(
-                middlewares=self.middlewares
-            )
+            subapp = web.Application(middlewares=self.middlewares)
 
             subapp.add_routes(self.routes)
             app.add_subapp(self.base, subapp)
         else:
             app.add_routes(self.routes)
 
-
-    def route(self, methods, path, route_name=None, middlewares=(), **middleware_kwargs):
+    def route(
+        self, methods, path, route_name=None, middlewares=(), **middleware_kwargs
+    ):
         # Chain middlewares for specific route
         if not self.is_subapp:
             middlewares = self.middlewares + list(middlewares)
@@ -77,13 +80,16 @@ class RouteManager(object):
 
             typed_handler = _partial(
                 attach_middleware_to_request_kwargs(result_middleware_kwargs),
-                handler=typed_handler
+                handler=typed_handler,
             )
 
-            self.routes.extend([
-                getattr(web, method.lower())(path, typed_handler, name=name)
-                for method in methods
-            ])
+            self.routes.extend(
+                [
+                    getattr(web, method.lower())(path, typed_handler, name=name)
+                    for method in methods
+                ]
+            )
 
             return typed_handler
+
         return route_decorator

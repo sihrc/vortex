@@ -12,12 +12,11 @@ Basic health check route.
 """
 RM = RouteManager("/")
 
+
 @RM.route(path="/health", methods=["GET"])
 async def health_check(request):
-    return web.Response(
-        text="ready",
-        status=200
-    )
+    return web.Response(text="ready", status=200)
+
 
 class AppIntegrationTestCase(AioHTTPTestCase):
     """
@@ -25,7 +24,7 @@ class AppIntegrationTestCase(AioHTTPTestCase):
     """
 
     async def get_application(self):
-        return get_app(route_managers=(RM, ))
+        return get_app(route_managers=(RM,))
 
     @unittest_run_loop
     async def test_health_check(self):
