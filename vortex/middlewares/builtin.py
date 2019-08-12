@@ -4,7 +4,6 @@ Allows modifying the request / response objects with customizable data for use i
 """
 from copy import deepcopy
 
-import warnings
 from aiohttp.web import middleware
 
 

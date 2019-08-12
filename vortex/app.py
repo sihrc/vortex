@@ -2,6 +2,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPPermanentRedirect
 
 from vortex.middlewares.builtin import attach_middleware_to_request_kwargs
+from vortex.logger import Logging
 
 DEFAULT_MIDDLEWARES = (
     web.normalize_path_middleware(
@@ -30,6 +31,5 @@ def get_app(route_managers=(), middlewares=(), configs=None):
 
 def start_app(app, host="0.0.0.0", port=80, logger=None):
     # TODO: Log server startup
-    web.run_app(
-        app, host=host, port=port, print=logger or print  # TODO: Replace with logger
-    )
+    logger = logger or Logging.getLogger("Vortex.Web")
+    web.run_app(app, host=host, port=port, print=logger or print)
