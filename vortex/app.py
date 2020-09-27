@@ -1,17 +1,27 @@
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPPermanentRedirect
 
-from vortex.middlewares.builtin import attach_middleware_to_request_kwargs
+from vortex.middlewares import (
+    attach_middleware_to_request_kwargs,
+    headers_middleware,
+    error_middleware,
+    logger_middleware,
+)
 from vortex.logger import Logging
 
 DEFAULT_MIDDLEWARES = (
     web.normalize_path_middleware(
         remove_slash=True, append_slash=False, redirect_class=HTTPPermanentRedirect
     ),
+    headers_middleware,
+    error_middleware,
+    logger_middleware,
 )
 
 
-def get_app(route_managers=(), middlewares=(), configs=None):
+def get_app(
+    route_managers=(), middlewares=(), configs=None,
+):
     configs = configs or {}
     apply_middlewares = list(DEFAULT_MIDDLEWARES) + [
         attach_middleware_to_request_kwargs(configs.get("middleware_kwargs", {}))

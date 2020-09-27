@@ -39,7 +39,7 @@ logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 
 class Logging(object):
     @classmethod
-    def getLogger(cls, name):
+    def get(cls, name):
         logger = ROOT_LOGGER.getChild(name)
         logger.level = logging.DEBUG
         logger.propagate = True
