@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="vortex",
+    name="vortex-http",
     version="0.3",
     description="aiohttp wrapped web framework",
     author="Chris Lee",
@@ -15,5 +15,9 @@ setup(
         "setuptools==50.0.3",
         "wheel==0.35.1",
     ],
-    extras_require={"testing": ["pytest", "pytest-aiohttp"], "auth": ["PyJWT==1.7.1"],},
+    extras_require={
+        "testing": ["pytest", "pytest-aiohttp"],
+        "auth": ["PyJWT==1.7.1"],
+        "db": ["sqlalchemy==1.3.18"],
+    },
 )
