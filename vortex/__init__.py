@@ -10,7 +10,7 @@ from aiohttp.web import middleware
 
 from .threading_utils import threaded, threaded_exec
 from .app import get_app, start_app
-from .serialization.json_serializer import json_response, threaded_json_response
+from .serialization import json_response, threaded_json_response
 
 __all__ = [
     "threaded",
