@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="vortex",
-    version="0.2",
+    version="0.3",
     description="aiohttp wrapped web framework",
     author="Chris Lee",
     author_email="sihrc.c.lee@gmail.com",
