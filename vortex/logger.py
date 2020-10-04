@@ -18,18 +18,12 @@ errorHandler = logging.FileHandler("/var/log/server-error.log")
 errorHandler.setFormatter(FORMATTER)
 errorHandler.setLevel(logging.WARNING)
 
-# VERBOSE LOGGING
-verboseHandler = logging.FileHandler("/var/log/verbose-server.log")
-verboseHandler.setFormatter(FORMATTER)
-verboseHandler.setLevel(logging.DEBUG)
-
 # STDOUT LOGGING
 streamHandler = logging.StreamHandler(sys.stdout)
 streamHandler.setFormatter(FORMATTER)
 streamHandler.setLevel(logging.INFO)
 
 ROOT_LOGGER.addHandler(errorHandler)
-ROOT_LOGGER.addHandler(verboseHandler)
 ROOT_LOGGER.addHandler(streamHandler)
 
 # Turn down 3rd party logging

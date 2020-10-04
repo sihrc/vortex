@@ -9,6 +9,7 @@ from vortex.middlewares import (
 )
 from vortex.logger import Logging
 
+
 DEFAULT_MIDDLEWARES = (
     web.normalize_path_middleware(
         remove_slash=True, append_slash=False, redirect_class=HTTPPermanentRedirect

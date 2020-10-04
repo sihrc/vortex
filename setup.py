@@ -17,7 +17,6 @@ setup(
     ],
     extras_require={
         "testing": ["pytest", "pytest-aiohttp"],
-        "auth": ["PyJWT==1.7.1"],
         "db": ["sqlalchemy==1.3.18"],
     },
 )
