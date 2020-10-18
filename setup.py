@@ -10,13 +10,13 @@ setup(
     packages=find_packages(),
     install_requires=[
         "aiodns==2.0.0",
-        "aiohttp==3.6.2",
+        "aiohttp==3.6.3",
         "cchardet==2.1.6",
         "setuptools==50.0.3",
         "wheel==0.35.1",
     ],
     extras_require={
-        "testing": ["pytest", "pytest-aiohttp"],
+        "test": ["pytest", "pytest-aiohttp"],
         "db": ["sqlalchemy==1.3.18"],
     },
 )
