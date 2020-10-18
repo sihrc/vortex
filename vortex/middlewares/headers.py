@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from aiohttp.web import Response, middleware
 
-ALLOWED_ORIGINS = os.getenv("VORTEX_ALLOWED_ORIGINS")
+ALLOWED_ORIGINS = os.getenv("VORTEX_ALLOWED_ORIGINS", "")
 DISABLE_ORIGIN_CHECK = strtobool(os.getenv("VORTEX_DISABLE_ORIGIN_CHECK", "False"))
 
 
@@ -19,18 +19,19 @@ ACCEPT = [
 
 @middleware
 async def headers_middleware(request, handler):
-    origin = request.headers.get("Origin")
-    if origin is not None:
-        parsed = urlparse(origin)
-        request.domain = parsed.hostname
-
     if request.method != "OPTIONS":
         response = await handler(request)
     else:
         response = Response()
 
-    if DISABLE_ORIGIN_CHECK or getattr(request, "domain", "").endswith(ALLOWED_ORIGINS):
-        response.headers["Access-Control-Allow-Origin"] = origin
+    origin = request.headers.get("Origin")
+    if origin:
+        parsed = urlparse(origin)
+        request.domain = parsed.hostname
+        if DISABLE_ORIGIN_CHECK or (
+            request.domain and request.domain.endswith(ALLOWED_ORIGINS)
+        ):
+            response.headers["Access-Control-Allow-Origin"] = origin
 
     response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers[
