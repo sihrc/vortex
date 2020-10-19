@@ -74,7 +74,9 @@ class RouteManager(object):
 
         result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
         result_middleware_kwargs.update(middleware_kwargs)
-        middlewares.append(attach_middleware_to_request_kwargs(middleware_kwargs))
+        middlewares.append(
+            attach_middleware_to_request_kwargs(result_middleware_kwargs)
+        )
 
         def route_decorator(handler):
             name = route_name or handler.__name__

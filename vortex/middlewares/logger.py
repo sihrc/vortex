@@ -16,8 +16,8 @@ async def logger_middleware(request, handler):
 
     log_str = ""
     log_str += f"{'[' + request.method + ']':<6} {request.path:<20} "
-    if request.auth and request.auth.user_id:
-        log_str += f"{'user_id:' + str(request.auth.user_id):<8} "
+    if request.auth and request.auth.id:
+        log_str += f"{'user_id:' + str(request.auth.id):<8} "
     else:
         log_str += f"{'unauth':<8} "
     if response is not None:
