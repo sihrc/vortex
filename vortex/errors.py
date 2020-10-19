@@ -9,6 +9,6 @@ class VortexException(Exception):
         return {"message": self.message, "code": self.code, "body": self.body}
 
 
-class UnhandledException(Exception):
+class UnhandledException(VortexException):
     def __init__(self):
         super().__init__("Internal Server Error", code=500)

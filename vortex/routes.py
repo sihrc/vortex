@@ -7,7 +7,6 @@ RM = RoutesManager(
     scopes_required=("scope:read", "scope:metadata") # Examples of keyword arguments available in middlewares
 )
 """
-from functools import wraps, partial as functools_partial
 from copy import deepcopy
 
 from aiohttp import web
@@ -20,11 +19,15 @@ def _partial(middleware, handler):
     """
     Custom partial in order to propagate original fn attributes
     """
-    resulting_func = functools_partial(middleware, handler=handler)
-    resulting_func.__name__ = handler.__name__
-    resulting_func.__module__ = handler.__module__
-    resulting_func.__doc__ = handler.__doc__
-    return resulting_func
+
+    async def partial(request):
+        response = await middleware(request, handler=handler)
+        return response
+
+    partial.__name__ = handler.__name__
+    partial.__module__ = handler.__module__
+    partial.__doc__ = handler.__doc__
+    return partial
 
 
 class RouteManager(object):
@@ -38,21 +41,24 @@ class RouteManager(object):
     These are later accessible via request.match_info[identifier]
     """
 
-    def __init__(self, base, middlewares=(), **middleware_kwargs):
+    middlewares = []
+
+    @classmethod
+    def register_default_middlewares(cls, middlewares):
+        cls.middlewares = middlewares
+
+    def __init__(self, base, middlewares=None, **middleware_kwargs):
         self.base = base
-        self.middlewares = [
-            attach_middleware_to_request_kwargs(middleware_kwargs)
-        ] + list(middlewares)
+        self.middlewares = middlewares if middlewares is not None else self.middlewares
+        self.middlewares = list(self.middlewares)
         self.base_middleware_kwargs = middleware_kwargs
         self.routes = []
-        self.is_subapp = self.base != "" and self.base != "/"
 
     def register(
         self, app
     ):  # Attach Middleware is not working when additional middlewars are specified in RouteManager
-        if self.is_subapp:
-            subapp = web.Application(middlewares=self.middlewares)
-
+        if self.base != "" and self.base != "/":
+            subapp = web.Application()
             subapp.add_routes(self.routes)
             app.add_subapp(self.base, subapp)
         else:
@@ -62,34 +68,28 @@ class RouteManager(object):
         self, methods, path, route_name=None, middlewares=(), **middleware_kwargs
     ):
         # Chain middlewares for specific route
-        if not self.is_subapp:
-            middlewares = self.middlewares + list(middlewares)
-
+        middlewares = self.middlewares + list(middlewares)
         if path.endswith("/"):
             path = path[:-1]
 
-        def route_decorator(handler):
-            typed_handler = type_check(handler)
-            name = route_name or handler.__name__
+        result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
+        result_middleware_kwargs.update(middleware_kwargs)
+        middlewares.append(attach_middleware_to_request_kwargs(middleware_kwargs))
 
-            result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
-            result_middleware_kwargs.update(middleware_kwargs)
+        def route_decorator(handler):
+            name = route_name or handler.__name__
+            handler = type_check(handler)
 
             for middleware in middlewares:
-                typed_handler = _partial(middleware, handler=typed_handler)
-
-            typed_handler = _partial(
-                attach_middleware_to_request_kwargs(result_middleware_kwargs),
-                handler=typed_handler,
-            )
+                handler = _partial(middleware, handler=handler)
 
             self.routes.extend(
                 [
-                    getattr(web, method.lower())(path, typed_handler, name=name)
+                    getattr(web, method.lower())(path, handler, name=name)
                     for method in methods
                 ]
             )
 
-            return typed_handler
+            return handler
 
         return route_decorator

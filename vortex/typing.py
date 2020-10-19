@@ -84,13 +84,13 @@ class Dict(Argument):
         for key, value in decoded.items():
             try:
                 key = self.key(key)
-            except:
+            except Exception:
                 raise TypeError(
                     f"Expected {key} in {decoded} to be castable to {self.key}"
                 )
             try:
                 value = self.value(value)
-            except:
+            except Exception:
                 raise TypeError(
                     f"Expected {value} in {decoded} to be castable to {self.value}"
                 )
@@ -198,7 +198,6 @@ def type_check(f):
                 raise InvalidFormat("POST Payload", "application/json")
             else:
                 arguments.update(post_data)
-
         resolved_arguments = {}
         for field in spec.args[1:]:
             value = None

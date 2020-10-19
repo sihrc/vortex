@@ -12,20 +12,7 @@ class JSONEncoder(json.JSONEncoder):
     """Class for turning objects into valid json."""
 
     def default(self, o):
-        """Encode objects when no custom handling has been defined."""
-        if isinstance(o.__class__, DeclarativeMeta):
-            fields = {}
-
-            if hasattr(o, "_format"):
-                # object specific prep for json serialization
-                o._format()
-
-            for field in o.response_columns:
-                fields[field] = self.default(getattr(o, field, None))
-
-            return fields
-
-        elif isinstance(o, datetime.datetime):
+        if isinstance(o, datetime.datetime):
             return o.timestamp()
 
         elif isinstance(o, Enum):
@@ -69,11 +56,13 @@ else:
             if isinstance(o.__class__, DeclarativeMeta):
                 fields = {}
 
-                if hasattr(o, "_format"):
+                if hasattr(o, "to_dict"):
                     # object specific prep for json serialization
-                    o._format()
+                    return o.to_dict()
 
-                for field in o.response_columns:
+                for field in getattr(
+                    o, "response_columns", (col.name for col in o.__table__.columns)
+                ):
                     fields[field] = self.default(getattr(o, field, None))
 
                 return fields
@@ -83,7 +72,7 @@ else:
                     result[field] = self.default(o[field])
                 return result
             else:
-                return super(self).default(o)
+                return super().default(o)
 
 
 def json_response(json_encoder, response, status=200):

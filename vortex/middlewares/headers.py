@@ -23,7 +23,6 @@ async def headers_middleware(request, handler):
         response = await handler(request)
     else:
         response = Response()
-
     origin = request.headers.get("Origin")
     if origin:
         parsed = urlparse(origin)

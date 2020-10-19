@@ -1,14 +1,28 @@
+import time
 from aiohttp.web import middleware
 
 from vortex.logger import Logging
 
-REQUEST_LOGGER = Logging.get("server.route")
-
 
 @middleware
 async def logger_middleware(request, handler):
-    REQUEST_LOGGER.info(f"{request.method} {request.path}")
-    response = await handler(request)
-    REQUEST_LOGGER.info(f"{request.method} {request.path} {response.status}")
+    start_time = time.time()
 
+    request.logger = Logging.get("route")
+    request.logger.info(
+        f"{'[' + request.method + ']':<6} {request.path:<20}{' ' * 10}received"
+    )
+    response = await handler(request)
+
+    log_str = ""
+    log_str += f"{'[' + request.method + ']':<6} {request.path:<20} "
+    if request.auth and request.auth.user_id:
+        log_str += f"{'user_id:' + str(request.auth.user_id):<8} "
+    else:
+        log_str += f"{'unauth':<8} "
+    if response is not None:
+        log_str += str(response.status) + " "
+    log_str += f"{(time.time() - start_time) * 1000:.3f}ms"
+
+    request.logger.info(log_str)
     return response
