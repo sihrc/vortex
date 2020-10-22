@@ -7,6 +7,7 @@ from .json_serializer import (
     json_response as _json_response,
     JSONEncoder,
 )
+from .custom import CustomSerializable
 
 
 class Config(object):
@@ -16,4 +17,10 @@ class Config(object):
 json_response = partial(_json_response, Config.default_json_encoder)
 threaded_json_response = partial(_threaded_json_response, Config.default_json_encoder)
 
-__all__ = ["json_response", "threaded_json_response", "Config", "JSONEncoder"]
+__all__ = [
+    "json_response",
+    "threaded_json_response",
+    "Config",
+    "JSONEncoder",
+    "CustomSerializable",
+]

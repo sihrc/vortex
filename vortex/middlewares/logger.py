@@ -12,11 +12,12 @@ async def logger_middleware(request, handler):
     request.logger.info(
         f"{'[' + request.method + ']':<6} {request.path:<20}{' ' * 10}received"
     )
+
     response = await handler(request)
 
     log_str = ""
     log_str += f"{'[' + request.method + ']':<6} {request.path:<20} "
-    if request.auth and request.auth.id:
+    if getattr(request, "auth", None) and request.auth.id:
         log_str += f"{'user_id:' + str(request.auth.id):<8} "
     else:
         log_str += f"{'unauth':<8} "

@@ -6,6 +6,7 @@ from enum import Enum
 from aiohttp import web
 
 from ..threading_utils import threaded
+from .custom import CustomSerializable
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -39,6 +40,8 @@ class JSONEncoder(json.JSONEncoder):
             return o
         elif isinstance(o, bytes):
             return o.decode("utf-8")
+        elif isinstance(o, CustomSerializable):
+            return o.pack(self.default)
         return super().default(o)
 
 
