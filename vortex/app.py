@@ -38,4 +38,4 @@ def get_app(route_managers=(), middlewares=(), configs=None):
 def start_app(app, host="0.0.0.0", port=80, logger=None):
     # TODO: Log server startup
     logger = logger or Logging.get("web")
-    web.run_app(app, host=host, port=port, print=logger.info or print)
+    web.run_app(app, host=host, port=port, print=logger or print)
