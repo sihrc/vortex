@@ -195,7 +195,8 @@ def type_check(f):
             try:
                 post_data = await request.json()
             except ValueError:
-                raise InvalidFormat("POST Payload", "application/json")
+                if request.method == "POST":
+                    raise InvalidFormat("POST Payload", "application/json")
             else:
                 arguments.update(post_data)
         resolved_arguments = {}
