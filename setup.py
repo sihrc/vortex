@@ -10,7 +10,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "aiodns==2.0.0",
-        "aiohttp==3.6.3",
+        "aiohttp==3.7.4",
         "cchardet==2.1.6",
         "setuptools==50.0.3",
         "wheel==0.35.1",
