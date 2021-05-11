@@ -13,7 +13,10 @@ class JSONEncoder(json.JSONEncoder):
     """Class for turning objects into valid json."""
 
     def default(self, o):
-        if isinstance(o, datetime.datetime):
+        if isinstance(o, CustomSerializable):
+            return o.pack(self.default)
+
+        elif isinstance(o, datetime.datetime):
             return o.timestamp()
 
         elif isinstance(o, Enum):
@@ -40,8 +43,6 @@ class JSONEncoder(json.JSONEncoder):
             return o
         elif isinstance(o, bytes):
             return o.decode("utf-8")
-        elif isinstance(o, CustomSerializable):
-            return o.pack(self.default)
         return super().default(o)
 
 
