@@ -8,6 +8,11 @@ from vortex.logger import Logging
 async def logger_middleware(request, handler):
     start_time = time.time()
 
+    logging_enabled = request.middleware.configs.get("enable_logging", True)
+
+    if not logging_enabled:
+        return await handler(request)
+
     request.logger = Logging.get("route")
     request.logger.info(
         f"{'[' + request.method + ']':<6} {request.path:<20}{' ' * 10}received"
