@@ -10,17 +10,6 @@ from vortex.middlewares import (
 from vortex.logger import Logging
 
 
-DEFAULT_MIDDLEWARES = (
-    web.normalize_path_middleware(
-        remove_slash=True, append_slash=False, redirect_class=HTTPPermanentRedirect
-    ),
-    attach_middleware_to_request_kwargs(),
-    logger_middleware,
-    headers_middleware,
-    error_middleware,
-)
-
-
 def get_app(route_managers=(), middlewares=(), configs=None):
     configs = configs or {}
     apply_middlewares = list(DEFAULT_MIDDLEWARES)

@@ -11,7 +11,7 @@ from copy import deepcopy
 
 from aiohttp import web
 
-from vortex.middlewares.builtin import attach_middleware_to_request_kwargs
+from vortex.middlewares import DEFAULT_MIDDLEWARES, attach_middleware_to_request_kwargs
 from vortex.typing import type_check
 
 
@@ -41,16 +41,15 @@ class RouteManager(object):
     These are later accessible via request.match_info[identifier]
     """
 
-    middlewares = []
+    default_middlewares = list(DEFAULT_MIDDLEWARES)
 
     @classmethod
     def register_default_middlewares(cls, middlewares):
-        cls.middlewares = middlewares
+        cls.default_middlewares = middlewares
 
     def __init__(self, base, middlewares=None, **middleware_kwargs):
         self.base = base
-        self.middlewares = middlewares if middlewares is not None else self.middlewares
-        self.middlewares = list(self.middlewares)
+        self.middlewares = list(middlewares)
         self.base_middleware_kwargs = middleware_kwargs
         self.routes = []
 
@@ -67,15 +66,17 @@ class RouteManager(object):
     def route(
         self, methods, path, route_name=None, middlewares=(), **middleware_kwargs
     ):
-        # Chain middlewares for specific route
-        middlewares = self.middlewares + list(middlewares)
         if path.endswith("/"):
             path = path[:-1]
 
         result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
         result_middleware_kwargs.update(middleware_kwargs)
-        middlewares.append(
-            attach_middleware_to_request_kwargs(result_middleware_kwargs)
+        # Chain middlewares for specific route
+        middlewares = (
+            [attach_middleware_to_request_kwargs(result_middleware_kwargs)]
+            + self.default_middlewares
+            + self.middlewares
+            + list(middlewares)
         )
 
         def route_decorator(handler):
