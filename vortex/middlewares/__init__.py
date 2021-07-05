@@ -1,13 +1,9 @@
-from .logger import logger_middleware
-from .headers import headers_middleware
-from .errors import error_middleware
-from .builtin import attach_middleware_to_request_kwargs
+from aiohttp.web import HTTPPermanentRedirect, middleware, normalize_path_middleware
 
-from aiohttp.web import (
-    HTTPPermanentRedirect,
-    middleware,
-    normalize_path_middleware,
-)
+from .builtin import attach_middleware_to_request_kwargs
+from .errors import error_middleware
+from .headers import headers_middleware
+from .logger import logger_middleware
 
 DEFAULT_MIDDLEWARES = (
     normalize_path_middleware(
@@ -19,9 +15,10 @@ DEFAULT_MIDDLEWARES = (
 )
 
 __all__ = [
-    "middleware",
     "attach_middleware_to_request_kwargs",
-    "logger_middleware",
-    "headers_middleware",
+    "DEFAULT_MIDDLEWARES",
     "error_middleware",
+    "headers_middleware",
+    "logger_middleware",
+    "middleware",
 ]

@@ -49,7 +49,7 @@ class RouteManager(object):
 
     def __init__(self, base, middlewares=None, **middleware_kwargs):
         self.base = base
-        self.middlewares = list(middlewares)
+        self.middlewares = list(middlewares or [])
         self.base_middleware_kwargs = middleware_kwargs
         self.routes = []
 

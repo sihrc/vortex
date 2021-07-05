@@ -1,18 +1,11 @@
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPPermanentRedirect
 
-from vortex.middlewares import (
-    attach_middleware_to_request_kwargs,
-    headers_middleware,
-    error_middleware,
-    logger_middleware,
-)
 from vortex.logger import Logging
 
 
 def get_app(route_managers=(), middlewares=(), configs=None):
     configs = configs or {}
-    apply_middlewares = list(DEFAULT_MIDDLEWARES)
+    apply_middlewares = list(middlewares)
     if middlewares:
         apply_middlewares.extend(list(middlewares))
     app = web.Application(middlewares=apply_middlewares)
