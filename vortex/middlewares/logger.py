@@ -9,7 +9,6 @@ async def logger_middleware(request, handler):
     start_time = time.time()
 
     logging_enabled = request.middleware.configs.get("enable_logging", True)
-    print("logging_enabled", logging_enabled, request.middleware.configs)
     if not logging_enabled:
         return await handler(request)
 

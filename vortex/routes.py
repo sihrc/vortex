@@ -73,11 +73,10 @@ class RouteManager(object):
         result_middleware_kwargs.update(middleware_kwargs)
         # Chain middlewares for specific route
         middlewares = (
-            +list(middlewares)
+            list(middlewares)
             + self.middlewares
-            + self.default_middlewares[
-                attach_middleware_to_request_kwargs(result_middleware_kwargs)
-            ]
+            + self.default_middlewares
+            + [attach_middleware_to_request_kwargs(result_middleware_kwargs)]
         )
 
         def route_decorator(handler):
