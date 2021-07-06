@@ -11,7 +11,7 @@ from copy import deepcopy
 
 from aiohttp import web
 
-from vortex.middlewares import DEFAULT_MIDDLEWARES, attach_middleware_to_request_kwargs
+from vortex.middlewares import attach_middleware_to_request_kwargs
 from vortex.typing import type_check
 
 
@@ -41,54 +41,51 @@ class RouteManager(object):
     These are later accessible via request.match_info[identifier]
     """
 
-    default_middlewares = list(DEFAULT_MIDDLEWARES)
-
-    @classmethod
-    def register_default_middlewares(cls, middlewares):
-        cls.default_middlewares = middlewares
-
-    def __init__(self, base, middlewares=None, **middleware_kwargs):
-        self.base = base
+    def __init__(self, route_prefix, middlewares=None, **middleware_kwargs):
+        self.route_prefix = route_prefix
+        assert (
+            route_prefix or not middlewares
+        ), "If middlewares are provided, route prefix must not be empty"
         self.middlewares = list(middlewares or [])
         self.base_middleware_kwargs = middleware_kwargs
         self.routes = []
 
     def register(
-        self, app
+        self, app, middlewares
     ):  # Attach Middleware is not working when additional middlewars are specified in RouteManager
-        if self.base != "" and self.base != "/":
-            subapp = web.Application()
-            subapp.add_routes(self.routes)
-            app.add_subapp(self.base, subapp)
-        else:
-            app.add_routes(self.routes)
 
-    def route(
-        self, methods, path, route_name=None, middlewares=(), **middleware_kwargs
-    ):
+        routes = []
+
+        for (method, middleware_kwargs, path, handler, name) in self.routes:
+            for middleware in [
+                [attach_middleware_to_request_kwargs(middleware_kwargs)]
+                + middlewares
+                + self.middlewares
+            ][::-1]:
+                handler = _partial(middleware, handler=handler)
+            routes.append(getattr(web, method.lower())(path, handler, name=name))
+
+        if self.route_prefix != "" and self.route_prefix != "/":
+            subapp = web.Application()
+            subapp.add_routes(routes)
+            app.add_subapp(self.route_prefix, subapp)
+        else:
+            app.add_routes(routes)
+
+    def route(self, methods, path, route_name=None, **middleware_kwargs):
         if path.endswith("/"):
             path = path[:-1]
 
         result_middleware_kwargs = deepcopy(self.base_middleware_kwargs)
         result_middleware_kwargs.update(middleware_kwargs)
-        # Chain middlewares for specific route
-        middlewares = (
-            list(middlewares)
-            + self.middlewares
-            + self.default_middlewares
-            + [attach_middleware_to_request_kwargs(result_middleware_kwargs)]
-        )
 
         def route_decorator(handler):
             name = route_name or handler.__name__
             handler = type_check(handler)
 
-            for middleware in middlewares:
-                handler = _partial(middleware, handler=handler)
-
             self.routes.extend(
                 [
-                    getattr(web, method.lower())(path, handler, name=name)
+                    (method.lower(), result_middleware_kwargs, path, handler, name)
                     for method in methods
                 ]
             )

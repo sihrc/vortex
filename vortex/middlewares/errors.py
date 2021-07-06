@@ -1,7 +1,7 @@
-import traceback
-from aiohttp.web import HTTPException, json_response, middleware
+from aiohttp.web import HTTPException, json_response
 
 from vortex.errors import UnhandledException, VortexException
+from vortex.middlewares import middleware
 
 UNHANDLED = json_response(UnhandledException().to_dict(), status=500)
 

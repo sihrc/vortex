@@ -1,18 +1,16 @@
 from aiohttp import web
 
 from vortex.logger import Logging
+from vortex.middlewares import DEFAULT_MIDDLEWARES
 
 
-def get_app(route_managers=(), middlewares=(), configs=None):
+def get_app(route_managers=(), middlewares=DEFAULT_MIDDLEWARES, configs=None):
     configs = configs or {}
-    apply_middlewares = list(middlewares)
-    if middlewares:
-        apply_middlewares.extend(list(middlewares))
-    app = web.Application(middlewares=apply_middlewares)
+    app = web.Application()
     app.update(**configs)
     for route_manager in route_managers:
         # TODO: Log route_manager routes loaded into app
-        route_manager.register(app)
+        route_manager.register(app, middlewares or [])
 
     return app
 

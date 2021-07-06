@@ -1,6 +1,5 @@
 import time
-from aiohttp.web import middleware
-
+from vortex.middlewares import middleware
 from vortex.logger import Logging
 
 

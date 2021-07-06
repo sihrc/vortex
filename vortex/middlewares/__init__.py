@@ -10,8 +10,8 @@ DEFAULT_MIDDLEWARES = (
         remove_slash=True, append_slash=False, redirect_class=HTTPPermanentRedirect
     ),
     logger_middleware,
-    headers_middleware,
     error_middleware,
+    headers_middleware,
 )
 
 __all__ = [

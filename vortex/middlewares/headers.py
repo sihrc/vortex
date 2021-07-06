@@ -2,9 +2,10 @@ import os
 from distutils.util import strtobool
 from urllib.parse import urlparse
 
-from vortex.config import DOMAIN
+from aiohttp.web import Response
 
-from aiohttp.web import Response, middleware
+from vortex.config import DOMAIN
+from vortex.middlewares import middleware
 
 ALLOWED_ORIGINS = os.getenv("VORTEX_ALLOWED_ORIGINS", "")
 DISABLE_ORIGIN_CHECK = strtobool(os.getenv("VORTEX_DISABLE_ORIGIN_CHECK", "False"))

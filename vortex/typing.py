@@ -2,8 +2,6 @@ import datetime
 import inspect
 import json
 
-from aiohttp.web import middleware
-
 from vortex.errors import VortexException
 
 
