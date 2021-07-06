@@ -6,7 +6,7 @@ aiohttp wrapped web framework
 Author: Chris Lee
 Email: sihrc.c.lee@gmail.com
 """
-from .middleware import middleware
+from .middlewares import middleware
 
 from .app import get_app, start_app
 from .serialization import json_response, threaded_json_response
