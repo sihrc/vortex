@@ -41,12 +41,20 @@ class RouteManager(object):
     These are later accessible via request.match_info[identifier]
     """
 
+    default_middlewares = None
+
+    @classmethod
+    def register_default_middlewares(cls, middlewares):
+        cls.default_middlewares = middlewares
+
     def __init__(self, route_prefix, middlewares=None, **middleware_kwargs):
         self.route_prefix = route_prefix
         assert (
             route_prefix or not middlewares
         ), "If middlewares are provided, route prefix must not be empty"
-        self.middlewares = list(middlewares or [])
+        self.middlewares = list(self.default_middlewares or []) + list(
+            middlewares or []
+        )
         self.base_middleware_kwargs = middleware_kwargs
         self.routes = []
 
@@ -57,11 +65,11 @@ class RouteManager(object):
         routes = []
 
         for (method, middleware_kwargs, path, handler, name) in self.routes:
-            for middleware in [
+            for middleware in (
                 [attach_middleware_to_request_kwargs(middleware_kwargs)]
-                + middlewares
+                + list(middlewares or [])
                 + self.middlewares
-            ][::-1]:
+            )[::-1]:
                 handler = _partial(middleware, handler=handler)
             routes.append(getattr(web, method.lower())(path, handler, name=name))
 
