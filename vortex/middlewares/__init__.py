@@ -10,8 +10,10 @@ DEFAULT_MIDDLEWARES = (
         remove_slash=True, append_slash=False, redirect_class=HTTPPermanentRedirect
     ),
     logger_middleware,
-    error_middleware,
     headers_middleware,
+    error_middleware,
+    # Error middleware must handle all errors ahead of these defaults.
+    # Do not change the order. Exceptions will interrupt middleware flow
 )
 
 __all__ = [
