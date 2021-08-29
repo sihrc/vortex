@@ -7,7 +7,7 @@ from aiohttp.web import Response
 from vortex.config import DOMAIN
 from vortex.middlewares import middleware
 
-ALLOWED_ORIGINS = os.getenv("VORTEX_ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS = os.getenv("VORTEX_ALLOWED_ORIGINS", "localhost")
 DISABLE_ORIGIN_CHECK = strtobool(os.getenv("VORTEX_DISABLE_ORIGIN_CHECK", "False"))
 
 

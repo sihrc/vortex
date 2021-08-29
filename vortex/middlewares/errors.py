@@ -1,4 +1,4 @@
-from aiohttp.web import HTTPException, json_response
+from aiohttp.web import HTTPException, json_response, HTTPFound
 
 from vortex.errors import UnhandledException, VortexException
 from vortex.middlewares import middleware
