@@ -36,7 +36,11 @@ class List(Argument):
         self.arg = arg
 
     def from_string(self, value):
-        return [string.strip() for string in value.strip().split(",")]
+        return [
+            val
+            for val in (string.strip() for string in value.strip().split(","))
+            if val
+        ]
 
     def call(self, value):
         return [self.arg(val) for val in value]
